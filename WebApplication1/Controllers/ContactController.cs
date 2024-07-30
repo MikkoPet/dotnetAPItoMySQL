@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebApplication1.Data;
-using WebApplication1.Models;
+using WebApplication1.Services.ContactService;
 
 namespace WebApplication1.Controllers
 {
@@ -9,70 +7,60 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class ContactController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IContactService contactService;
 
-        public ContactController(DataContext context)
+        public ContactController(IContactService context)
         {
-            _context = context;
+            contactService = context;
         }
 
         [HttpGet]
         public async Task<ActionResult<List<Contact>>> GetAllContacts()
         {
-            var contacts = await _context.Contacts.ToListAsync();
+            var result = await contactService.GetContacts();
 
-            return Ok(contacts);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<List<Contact>>> GetContact(int id)
         {
-            var contact = await _context.Contacts.FindAsync(id);
-            if (contact is null)
-                return BadRequest("Contact not found.");
+            var result = await contactService.GetSingleContact(id);
+            if (result is null)
+                return NotFound("Contact not found");
 
-            return Ok(contact);
+            return Ok(result);
         }
 
         [HttpPost]
         public async Task<ActionResult<List<Contact>>> AddContact(Contact contact)
         {
-            _context.Contacts.Add(contact);
-            await _context.SaveChangesAsync();
+            var result = await contactService.AddContact(contact);
+            if (result is null)
+                return NotFound();
 
-            return Ok(await _context.Contacts.ToListAsync());
+            return Ok(result);
         }
 
         [HttpPut]
-        public async Task<ActionResult<List<Contact>>>  UpdateContact(Contact contact)
+        public async Task<ActionResult<List<Contact>>> UpdateContact(int id, Contact contact)
         {
-            var dbContact = await _context.Contacts.FindAsync(contact.Id);
+            var result = await contactService.UpdateContact(id, contact);
+            if (result is null)
+                return NotFound("Contact not found");
 
-            if (dbContact is null)
-                return BadRequest("Contact not found.");
-
-            dbContact.FirstName = contact.FirstName;
-            dbContact.LastName = contact.LastName;
-            dbContact.Gender = contact.Gender;
-            dbContact.AvatarPath = contact.AvatarPath;
-            dbContact.DateOfBirth = contact.DateOfBirth;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(await _context.Contacts.ToListAsync());
+            return Ok(result);
         }
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public async Task<ActionResult<List<Contact>>> DeleteContact(int id)
         {
-			var contact = await _context.Contacts.FindAsync(id);
-			if (contact is null)
-				return BadRequest("Contact not found.");
+            var contact = await contactService.DeleteContact(id);
+            if (contact is null)
+                return NotFound("Contact not found.");
 
-            _context.Contacts.Remove(contact);
-            await _context.SaveChangesAsync();
+            return Ok(contact);
 
-            return Ok(await _context.Contacts.ToListAsync());
-		}
-	}
+        }
+    }
 }
