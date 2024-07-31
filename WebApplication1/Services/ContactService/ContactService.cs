@@ -2,7 +2,7 @@
 
 namespace WebApplication1.Services.ContactService
 {
-	class ContactService : IContactService
+	public class ContactService : IContactService
 	{
 		private readonly DataContext _context;
 		public ContactService(DataContext context) 

@@ -9,9 +9,9 @@ namespace WebApplication1.Controllers
     {
         private readonly IContactService contactService;
 
-        public ContactController(IContactService context)
+        public ContactController(IContactService service)
         {
-            contactService = context;
+            contactService = service;
         }
 
         [HttpGet]
